@@ -81,6 +81,8 @@ import log, { isDebugMode, mainLog, getLogFilePath } from './logger'
 import { setPerfEnabled, enableDebug } from '@craft-agent/shared/utils'
 import { initNotificationService, clearBadgeCount, initBadgeIcon, initInstanceBadge } from './notifications'
 import { checkForUpdatesOnLaunch, setWindowManager as setAutoUpdateWindowManager, isUpdating } from './auto-update'
+import { registerMcpSandboxScheme, setupMcpSandboxProtocol } from './protocols/mcp-sandbox'
+
 
 // Initialize electron-log for renderer process support
 log.initialize()
@@ -91,6 +93,9 @@ if (isDebugMode) {
   enableDebug()
   setPerfEnabled(true)
 }
+
+// Register custom mcp-sandbox:// protocol scheme (must be before app.whenReady)
+registerMcpSandboxScheme()
 
 // Custom URL scheme for deeplinks (e.g., craftagents://auth-complete)
 // Supports multi-instance dev: CRAFT_DEEPLINK_SCHEME env var (craftagents1, craftagents2, etc.)
@@ -210,6 +215,8 @@ async function createInitialWindows(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
+  // Set up mcp-sandbox:// protocol handler (must be after app.whenReady)
+  setupMcpSandboxProtocol()
   // Register bundled assets root so all seeding functions can find their files
   // (docs, permissions, themes, tool-icons resolve via getBundledAssetsDir)
   setBundledAssetsRoot(__dirname)
